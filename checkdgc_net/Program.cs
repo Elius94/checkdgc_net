@@ -58,6 +58,7 @@ namespace checkdgc_net
                         {
                             capture.Read(image); // same as cvQueryFrame
                             if (image.Empty()) break;
+                            Cv2.Line(image, new OpenCvSharp.Point(0, 225), new OpenCvSharp.Point(500, 225), Scalar.Red, 2);
                             window.ShowImage(image);
                             window.Resize(500, 500);
                             //Mat filtered = new Mat();
