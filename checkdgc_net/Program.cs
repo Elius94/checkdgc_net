@@ -7,15 +7,13 @@ using System.Drawing;
 using ZXing;
 using System.Net.Http;
 using System.Net;
-using Microsoft.Extensions.Options;
 using OpenCvSharp;
-using System.Threading;
+using OpenCvSharp.Extensions;
 using System.Speech.Synthesis;
 using System.Drawing.Drawing2D;
-using System.Reflection;
-using System.IO;
 using DgcReader.Models;
-using checkdgc_net.Properties;
+using DgcReader.Interfaces.BlacklistProviders;
+using DgcReader.BlacklistProviders.Italy;
 
 namespace checkdgc_net
 {
@@ -29,21 +27,35 @@ namespace checkdgc_net
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 var httpClient = new HttpClient();
 
-                DgcItalianRulesValidatorOptions dgcItalianRulesValidatorOptions = new DgcItalianRulesValidatorOptions();
-                IOptions<DgcItalianRulesValidatorOptions> options = Options.Create(dgcItalianRulesValidatorOptions);
-                options.Value.BasePath = args[0];
-                options.Value.UseAvailableListWhileRefreshing = true;
                 // You can use the constructor
-                var rulesValidator = new DgcItalianRulesValidator(httpClient, options);
+                var rulesValidator = DgcItalianRulesValidator.Create(httpClient,
+                    new DgcItalianRulesValidatorOptions
+                    {
+                        RefreshInterval = TimeSpan.FromHours(24),
+                        MinRefreshInterval = TimeSpan.FromHours(1),
+                        BasePath = args[0],
+                        UseAvailableValuesWhileRefreshing = true,
+                        ValidationMode = ValidationMode.Basic3G
+                    });
 
-                ItalianTrustListProviderOptions dgcItalianTrustListProviderOptions = new ItalianTrustListProviderOptions();
-                IOptions<ItalianTrustListProviderOptions> optionsSignature = Options.Create(dgcItalianTrustListProviderOptions);
-                optionsSignature.Value.BasePath = args[0];
-                optionsSignature.Value.UseAvailableListWhileRefreshing = true;
-                var trustListProvider = new ItalianTrustListProvider(httpClient, optionsSignature);
+                var trustListProvider = ItalianTrustListProvider.Create(httpClient,
+                    new ItalianTrustListProviderOptions
+                    {
+                        RefreshInterval = TimeSpan.FromHours(24),
+                        MinRefreshInterval = TimeSpan.FromHours(1),
+                        BasePath = args[0],
+                        SaveCertificate = true,
+                        UseAvailableListWhileRefreshing = true
+                    });
+
+                var drlBlacklistProvider = ItalianDrlBlacklistProvider.Create(httpClient);
 
                 // Create an instance of the DgcReaderService
-                var dgcReader = new DgcReaderService(trustListProvider, rulesValidator, rulesValidator);
+                var dgcReader = DgcReaderService.Create(
+                    trustListProviders: new[] { trustListProvider },
+                    blackListProviders: new IBlacklistProvider[] { rulesValidator, drlBlacklistProvider },
+                    rulesValidators: new[] { rulesValidator }
+                );
 
                 Console.WriteLine("Dgc Reader Creato");
 
@@ -81,7 +93,7 @@ namespace checkdgc_net
                             //Cv2.AdaptiveThreshold(image, filtered, 125, AdaptiveThresholdTypes.MeanC, ThresholdTypes.Binary, 11, 12);
                             Cv2.WaitKey(50);
                             //Thread.Sleep(500);
-                            var res = await ParseDgc(dgcReader, OpenCvSharp.Extensions.BitmapConverter.ToBitmap(image));
+                            var res = await ParseDgc(dgcReader, BitmapConverter.ToBitmap(image));
                             if (res != null && res.Status == DgcResultStatus.Valid)
                             {
                                 Console.Beep(880, 200);
@@ -96,7 +108,7 @@ namespace checkdgc_net
                                 g.DrawString("Codice QR Valido:\n" + res.Dgc.Name.GivenName + " " + res.Dgc.Name.FamilyName + "  " + res.Dgc.DateOfBirth, new Font("Calibri", 18), Brushes.Black, rectf);
 
                                 g.Flush();
-                                window.ShowImage(OpenCvSharp.Extensions.BitmapConverter.ToMat(ok));
+                                window.ShowImage(BitmapConverter.ToMat(ok));
                                 //Console.Beep(880, 500);
                                 SpeechSynthesizer synthesizer = new SpeechSynthesizer();
                                 synthesizer.SelectVoice(synthesizer.GetInstalledVoices()[0].VoiceInfo.Name);
@@ -134,13 +146,14 @@ namespace checkdgc_net
             {
                 try
                 {
-                    // Decode and validate the signature.
-                    // If anything fails, an exception is thrown containing the error details
-                    var result = await dgc.VerifyForItaly(decodedQrcode.ToString(), ValidationMode.Strict2G);
-                    //Console.WriteLine(decodedQrcode.ToString());
-                    var status = result.Status;
-                    var signatureIsValid = result.HasValidSignature;
-                    Console.WriteLine(status + " for " + result.Dgc.Name.GivenName + " " + result.Dgc.Name.FamilyName + " _ " + result.Dgc.DateOfBirth);
+
+                    string acceptanceCountry = "IT";    // Specify the 2-letter ISO code of the acceptance country
+
+                    // Decode and validate the qr code data.
+                    // The result will contain all the details of the validated object
+                    var result = await dgc.Verify(decodedQrcode.ToString(), acceptanceCountry);
+
+
                     return result;
                 }
                 catch (Exception e)
