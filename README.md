@@ -2,6 +2,9 @@
 Example implementation of the .net library for greenpass verification.
 Useful if you are triyng to build a triage automatic totem with camera.
 
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=elius94&repo=checkdgc_net&theme=github_dark&show_icons=true)](https://github.com/Elius94/checkdgc_net
+)
+
 ## .NET 4.7 + OpenCV
 It uses .NET 4.7 framework with Open CV (OpencvSharp)
 
