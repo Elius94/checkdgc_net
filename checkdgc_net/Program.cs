@@ -142,21 +142,41 @@ namespace checkdgc_net
         }
         private static bool OutputShow(DgcValidationResult res)
         {
-            Console.Beep(880, 200);
-            Bitmap ok = new Bitmap(checkdgc_net.Properties.Resources.ok);
-            RectangleF rectf = new RectangleF(50, 390, 350, 100);
+            if (res.Status == DgcResultStatus.Valid)
+            {
+                Console.Beep(880, 200);
+                Bitmap ok = new Bitmap(checkdgc_net.Properties.Resources.ok);
+                RectangleF rectf = new RectangleF(50, 390, 350, 100);
 
-            Graphics g = Graphics.FromImage(ok);
+                Graphics g = Graphics.FromImage(ok);
 
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            g.DrawString("Codice QR Valido:\n" + res.Dgc.Name.GivenName + " " + res.Dgc.Name.FamilyName + "  " + res.Dgc.DateOfBirth, new Font("Calibri", 18), Brushes.Black, rectf);
-            g.Flush();
-            window.ShowImage(BitmapConverter.ToMat(ok));
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawString("Codice QR Valido:\n" + res.Dgc.Name.GivenName + " " + res.Dgc.Name.FamilyName + "  " + res.Dgc.DateOfBirth, new Font("Calibri", 18), Brushes.Black, rectf);
+                g.Flush();
+                window.ShowImage(BitmapConverter.ToMat(ok));
 
-            // Synchronous
-            synthesizer.SpeakAsync("Codice QR Valido");
+                // Synchronous
+                synthesizer.SpeakAsync("Codice QR Valido");
+            } else
+            {
+                Console.Beep(440, 200);
+                Bitmap ko = new Bitmap(checkdgc_net.Properties.Resources.ko);
+                RectangleF rectf = new RectangleF(50, 390, 350, 100);
+
+                Graphics g = Graphics.FromImage(ko);
+
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawString("Codice QR Non Valido:\n" + res.Dgc.Name.GivenName + " " + res.Dgc.Name.FamilyName + "  " + res.Dgc.DateOfBirth, new Font("Calibri", 18), Brushes.Black, rectf);
+                g.Flush();
+                window.ShowImage(BitmapConverter.ToMat(ko));
+
+                // Synchronous
+                synthesizer.SpeakAsync("Codice QR Non Valido");
+            }
             Cv2.WaitKey(2000);
             showCamera = true;
             return true;

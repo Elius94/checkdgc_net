@@ -309,6 +309,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ko.jpg" />
     <Content Include="ok.jpg" />
   </ItemGroup>
   <ItemGroup>
