@@ -275,6 +275,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ok.jpg" />
+    <None Include="Resources\ko.jpg" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
