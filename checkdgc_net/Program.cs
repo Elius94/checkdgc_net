@@ -43,7 +43,7 @@ namespace checkdgc_net
                     RefreshInterval = TimeSpan.FromHours(24),
                     MinRefreshInterval = TimeSpan.FromHours(1),
                     UseAvailableValuesWhileRefreshing = true,
-                    ValidationMode = ValidationMode.Basic3G
+                    ValidationMode = DgcReader.RuleValidators.Italy.Models.ValidationMode.Basic3G
                 });
 
             var trustListProvider = ItalianTrustListProvider.Create(httpClient,
