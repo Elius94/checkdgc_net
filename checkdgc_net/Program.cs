@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DgcReader;
-using DgcReader.RuleValidators.Italy;
-using DgcReader.TrustListProviders.Italy;
 using System.Drawing;
 using ZXing;
 using System.Net.Http;
@@ -11,12 +8,15 @@ using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using System.Speech.Synthesis;
 using System.Drawing.Drawing2D;
-using DgcReader.Models;
-using DgcReader.Interfaces.BlacklistProviders;
-using DgcReader.BlacklistProviders.Italy;
 using System.Threading;
 using System.Linq;
 using System.Windows.Forms;
+using DgcReader;
+using DgcReader.RuleValidators.Italy;
+using DgcReader.TrustListProviders.Italy;
+using DgcReader.BlacklistProviders.Italy;
+using DgcReader.Interfaces.BlacklistProviders;
+using DgcReader.Models;
 
 namespace checkdgc_net
 {
@@ -37,13 +37,13 @@ namespace checkdgc_net
             var httpClient = new HttpClient();
 
             // You can use the constructor
-            var rulesValidator = DgcItalianRulesValidator.Create(httpClient,
+            var rulesValidator = DgcItalianRulesValidator.Create(httpClient, 
                 new DgcItalianRulesValidatorOptions
                 {
                     RefreshInterval = TimeSpan.FromHours(24),
                     MinRefreshInterval = TimeSpan.FromHours(1),
                     UseAvailableValuesWhileRefreshing = true,
-                    ValidationMode = DgcReader.RuleValidators.Italy.Models.ValidationMode.Basic3G
+                    ValidationMode = DgcReader.RuleValidators.Italy.Models.ValidationMode.Work
                 });
 
             var trustListProvider = ItalianTrustListProvider.Create(httpClient,
@@ -75,7 +75,7 @@ namespace checkdgc_net
 
             Console.WriteLine("Dgc Reader Creato");
 
-            VideoCapture capture = new VideoCapture(0);
+            VideoCapture capture = new VideoCapture(1);
             using (window = new Window("Camera", WindowFlags.FullScreen))
             using (QRCodeDetector qrCodeDetector = new QRCodeDetector())
             using (Mat image = new Mat()) // Frame image buffer
